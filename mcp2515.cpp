@@ -356,7 +356,7 @@ MCP2515::ERROR MCP2515::setBitrate(const CAN_SPEED canSpeed, CAN_CLOCK canClock)
             cfg1 = MCP_16MHz_83k3BPS_CFG1;
             cfg2 = MCP_16MHz_83k3BPS_CFG2;
             cfg3 = MCP_16MHz_83k3BPS_CFG3;
-            break; 
+            break;
 
             case (CAN_100KBPS):                                             // 100Kbps
             cfg1 = MCP_16MHz_100kBPS_CFG1;
@@ -539,7 +539,7 @@ MCP2515::ERROR MCP2515::setFilterMask(const MASK mask, const bool ext, const uin
     if (res != ERROR_OK) {
         return res;
     }
-    
+
     uint8_t tbufdata[4];
     prepareId(tbufdata, ext, ulData);
 
@@ -552,7 +552,7 @@ MCP2515::ERROR MCP2515::setFilterMask(const MASK mask, const bool ext, const uin
     }
 
     setRegisters(reg, tbufdata, 4);
-    
+
     return ERROR_OK;
 }
 
@@ -707,6 +707,21 @@ bool MCP2515::checkError(void)
     }
 }
 
+CAN_STATE MCP2515::getBusState(void)
+{
+    uint8_t eflg = getErrorFlags();
+    if ( eflg & EFLG_TXBO ) {
+        return BUS_OFF;
+    } else if ( eflg & (EFLG_TXEP | EFLG_RXEP) ) {
+        return BUS_PASSIVE;
+    } else if ( eflg & EFLG_EWARN) {
+        return BUS_WARN;
+    } else {
+        return BUS_ACTIVE;
+    }
+}
+
+
 uint8_t MCP2515::getErrorFlags(void)
 {
     return readRegister(MCP_EFLG);
@@ -741,11 +756,11 @@ void MCP2515::clearRXnOVR(void)
 {
 	uint8_t eflg = getErrorFlags();
 	if (eflg != 0) {
-		clearRXnOVRFlags();
-		clearInterrupts();
-		//modifyRegister(MCP_CANINTF, CANINTF_ERRIF, 0);
+        clearRXnOVRFlags();
+	    clearInterrupts();
+	    //modifyRegister(MCP_CANINTF, CANINTF_ERRIF, 0);
 	}
-	
+
 }
 
 void MCP2515::clearMERR()
@@ -762,12 +777,17 @@ void MCP2515::clearERRIF()
     modifyRegister(MCP_CANINTF, CANINTF_ERRIF, 0);
 }
 
-uint8_t MCP2515::errorCountRX(void)                             
+void MCP2515::clearWAKIF()
+{
+    modifyRegister(MCP_CANINTF, CANINTF_WAKIF, 0);
+}
+
+uint8_t MCP2515::errorCountRX(void)
 {
     return readRegister(MCP_REC);
 }
 
-uint8_t MCP2515::errorCountTX(void)                             
+uint8_t MCP2515::errorCountTX(void)
 {
     return readRegister(MCP_TEC);
 }
