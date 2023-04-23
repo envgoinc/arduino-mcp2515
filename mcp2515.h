@@ -461,7 +461,8 @@ class MCP2515
         ERROR setMode(const CANCTRL_REQOP_MODE mode);
 
         uint8_t readRegister(const REGISTER reg);
-        void readRegisters(const REGISTER reg, uint8_t values[], const uint8_t n);
+        void readRegisters(const REGISTER reg, uint8_t values[], const uint8_t n, const bool end_transfer=true);
+        void continueReadRegisters(uint8_t values[], const uint8_t n);
         void setRegister(const REGISTER reg, const uint8_t value);
         void setRegisters(const REGISTER reg, const uint8_t values[], const uint8_t n);
         void modifyRegister(const REGISTER reg, const uint8_t mask, const uint8_t data);

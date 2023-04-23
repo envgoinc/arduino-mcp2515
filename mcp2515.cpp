@@ -100,7 +100,7 @@ uint8_t MCP2515::readRegister(const REGISTER reg)
     return ret;
 }
 
-void MCP2515::readRegisters(const REGISTER reg, uint8_t values[], const uint8_t n)
+void MCP2515::readRegisters(const REGISTER reg, uint8_t values[], const uint8_t n, bool end_transfer)
 {
     startSPI();
     SPIn->transfer(INSTRUCTION_READ);
@@ -109,8 +109,20 @@ void MCP2515::readRegisters(const REGISTER reg, uint8_t values[], const uint8_t 
     for (uint8_t i=0; i<n; i++) {
         values[i] = SPIn->transfer(0x00);
     }
+    if(end_transfer) {
+        endSPI();
+    }
+}
+
+void MCP2515::continueReadRegisters(uint8_t values[], const uint8_t n)
+{
+    // mcp2515 has auto-increment of address-pointer
+    for (uint8_t i=0; i<n; i++) {
+        values[i] = SPIn->transfer(0x00);
+    }
     endSPI();
 }
+
 
 void MCP2515::setRegister(const REGISTER reg, const uint8_t value)
 {
@@ -639,7 +651,7 @@ MCP2515::ERROR MCP2515::readMessage(const RXBn rxbn, struct can_frame *frame)
 
     uint8_t tbufdata[5];
 
-    readRegisters(rxb->SIDH, tbufdata, 5);
+    readRegisters(rxb->SIDH, tbufdata, 5, false);
 
     uint32_t id = (tbufdata[MCP_SIDH]<<3) + (tbufdata[MCP_SIDL]>>5);
 
@@ -655,6 +667,8 @@ MCP2515::ERROR MCP2515::readMessage(const RXBn rxbn, struct can_frame *frame)
         return ERROR_FAIL;
     }
 
+    continueReadRegisters(frame->data, dlc);
+
 #ifdef CAN_RTR
     uint8_t ctrl = readRegister(rxb->CTRL);
     if (ctrl & RXBnCTRL_RTR) {
@@ -664,8 +678,6 @@ MCP2515::ERROR MCP2515::readMessage(const RXBn rxbn, struct can_frame *frame)
 
     frame->can_id = id;
     frame->can_dlc = dlc;
-
-    readRegisters(rxb->DATA, frame->data, dlc);
 
     modifyRegister(MCP_CANINTF, rxb->CANINTF_RXnIF, 0);
 
