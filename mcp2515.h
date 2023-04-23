@@ -202,6 +202,13 @@ enum CAN_CLKOUT {
     CLKOUT_DIV8 = 0x3,
 };
 
+enum CAN_STATE {
+    BUS_ACTIVE,
+    BUS_WARN,
+    BUS_PASSIVE,
+    BUS_OFF
+};
+
 class MCP2515
 {
     public:
@@ -460,7 +467,7 @@ class MCP2515
         void modifyRegister(const REGISTER reg, const uint8_t mask, const uint8_t data);
 
         void prepareId(uint8_t *buffer, const bool ext, const uint32_t id);
-    
+
     public:
         MCP2515(const uint8_t _CS, const uint32_t _SPI_CLOCK = DEFAULT_SPI_CLOCK, SPIClass * _SPI = nullptr);
         ERROR reset(void);
@@ -480,6 +487,7 @@ class MCP2515
         ERROR readMessage(struct can_frame *frame);
         bool checkReceive(void);
         bool checkError(void);
+        CAN_STATE getBusState(void);
         uint8_t getErrorFlags(void);
         void clearRXnOVRFlags(void);
         uint8_t getInterrupts(void);
@@ -490,6 +498,7 @@ class MCP2515
         void clearRXnOVR(void);
         void clearMERR();
         void clearERRIF();
+        void clearWAKIF();
         uint8_t errorCountRX(void);
         uint8_t errorCountTX(void);
 };
