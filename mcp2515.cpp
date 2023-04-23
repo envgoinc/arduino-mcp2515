@@ -639,6 +639,7 @@ MCP2515::ERROR MCP2515::readMessage(const RXBn rxbn, struct can_frame *frame)
 
     uint8_t tbufdata[5];
 
+#ifdef CAN_EXTENDED_ID
     readRegisters(rxb->SIDH, tbufdata, 5);
 
     uint32_t id = (tbufdata[MCP_SIDH]<<3) + (tbufdata[MCP_SIDL]>>5);
@@ -649,16 +650,23 @@ MCP2515::ERROR MCP2515::readMessage(const RXBn rxbn, struct can_frame *frame)
         id = (id<<8) + tbufdata[MCP_EID0];
         id |= CAN_EFF_FLAG;
     }
+#else
+    readRegisters(rxb->SIDH, tbufdata, 2);
+
+    uint32_t id = (tbufdata[MCP_SIDH]<<3) + (tbufdata[MCP_SIDL]>>5);
+#endif
 
     uint8_t dlc = (tbufdata[MCP_DLC] & DLC_MASK);
     if (dlc > CAN_MAX_DLEN) {
         return ERROR_FAIL;
     }
 
+#ifdef CAN_RTR
     uint8_t ctrl = readRegister(rxb->CTRL);
     if (ctrl & RXBnCTRL_RTR) {
         id |= CAN_RTR_FLAG;
     }
+#endif
 
     frame->can_id = id;
     frame->can_dlc = dlc;
