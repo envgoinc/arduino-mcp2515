@@ -1,3 +1,6 @@
+/*
+  Wrapper for mcp2515 driver
+*/
 
 #ifndef MCP2515_CAN_H_
 #define MCP2515_CAN_H_
