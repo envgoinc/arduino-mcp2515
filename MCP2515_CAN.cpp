@@ -338,7 +338,7 @@ MCP2515_CAN::CAN_ERROR MCP2515_CAN::receiveCan(const MCP2515::RXBn rxBuffer){
 
 
 bool MCP2515_CAN::addToRingBuffer(RingbufferTypeDef &ring, const can_frame &msg){
-  uint16_t nextEntry = (ring.head + 1) % ring.size;
+  uint8_t nextEntry = (ring.head + 1) % ring.size;
 
   // check if the ring buffer is full
   if(nextEntry == ring.tail)
@@ -380,7 +380,7 @@ void MCP2515_CAN::initializeBuffers(void){
     initRingBuffer(rxRing, rx_buffer, sizeRxBuffer);
 }
 
-void MCP2515_CAN::initRingBuffer(RingbufferTypeDef &ring, volatile can_frame *buffer, uint32_t size){
+void MCP2515_CAN::initRingBuffer(RingbufferTypeDef &ring, volatile can_frame *buffer, uint8_t size){
     ring.buffer = buffer;
     ring.size = size;
     ring.head = 0;
@@ -397,12 +397,12 @@ bool MCP2515_CAN::isRingBufferEmpty(RingbufferTypeDef &ring){
 
 }
 uint32_t MCP2515_CAN::ringBufferCount(RingbufferTypeDef &ring){
-  int32_t entries;
+  uint8_t entries;
   entries = ring.head - ring.tail;
 
   if(entries < 0)
   {
       entries += ring.size;
   }
-  return((uint32_t)entries);
+  return((uint8_t)entries);
 }

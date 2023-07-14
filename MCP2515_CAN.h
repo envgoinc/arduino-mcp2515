@@ -12,16 +12,14 @@ class MCP2515_CAN{
   public:
 
     typedef enum RXQUEUE_TABLE {
-      RX_SIZE_2 = (uint16_t)2,
-      RX_SIZE_4 = (uint16_t)4,
-      RX_SIZE_8 = (uint16_t)8,
-      RX_SIZE_16 = (uint16_t)16,
-      RX_SIZE_32 = (uint16_t)32,
-      RX_SIZE_64 = (uint16_t)64,
-      RX_SIZE_128 = (uint16_t)128,
-      RX_SIZE_256 = (uint16_t)256,
-      RX_SIZE_512 = (uint16_t)512,
-      RX_SIZE_1024 = (uint16_t)1024
+      RX_SIZE_2 = (uint8_t)2,
+      RX_SIZE_4 = (uint8_t)4,
+      RX_SIZE_8 = (uint8_t)8,
+      RX_SIZE_16 = (uint8_t)16,
+      RX_SIZE_32 = (uint8_t)32,
+      RX_SIZE_64 = (uint8_t)64,
+      RX_SIZE_128 = (uint8_t)128,
+      RX_SIZE_256 = (uint8_t)256,
     } RXQUEUE_TABLE;
 
     typedef enum CAN_ERROR{
@@ -49,7 +47,7 @@ class MCP2515_CAN{
     typedef struct can_frame can_frame;
     typedef enum CAN_CLOCK CAN_CLOCK;
 
-    // Default buffer sizes are set to 64 and 16. But this can be changed by using constructor in main code.
+    // Default buffer size is set to 16. But this can be changed by using constructor in main code.
     MCP2515_CAN(uint8_t cs, const uint32_t spi_clock = 0, RXQUEUE_TABLE rxSize = RX_SIZE_16);
     MCP2515_CAN(uint8_t cs, RXQUEUE_TABLE rxSize = RX_SIZE_16);
     void begin();
@@ -70,9 +68,9 @@ class MCP2515_CAN{
   
     // These are public because these are also used from interrupts.
     typedef struct RingbufferTypeDef {
-      volatile uint16_t head;
-      volatile uint16_t tail;
-      uint16_t size;
+      volatile uint8_t head;
+      volatile uint8_t tail;
+      uint8_t size;
       volatile can_frame *buffer;
     } RingbufferTypeDef;
 
@@ -84,7 +82,7 @@ class MCP2515_CAN{
     volatile can_frame *rx_buffer;
 
   protected:
-    uint16_t sizeRxBuffer;
+    uint8_t sizeRxBuffer;
   
   private:
     MCP2515 *_mcp2515;
@@ -103,11 +101,11 @@ class MCP2515_CAN{
     static const uint16_t TIMESTAMP_LIMIT = 0xEA60;
 
     void setError(CAN_ERROR error);
-    bool isInitialized() { return rx_buffer != 0; } // ADDED
-    void initRingBuffer(RingbufferTypeDef &ring, volatile can_frame *buffer, uint32_t size); // ADDED
-    void initializeBuffers(void); // ADDED
-    bool isRingBufferEmpty(RingbufferTypeDef &ring); // ADDED
-    uint32_t ringBufferCount(RingbufferTypeDef &ring); // ADDED
+    bool isInitialized() { return rx_buffer != 0; }
+    void initRingBuffer(RingbufferTypeDef &ring, volatile can_frame *buffer, uint8_t size);
+    void initializeBuffers(void);
+    bool isRingBufferEmpty(RingbufferTypeDef &ring);
+    uint32_t ringBufferCount(RingbufferTypeDef &ring);
 
     CAN_ERROR createBusState(const char state, char *buffer, const int length);
     CAN_ERROR createErrorStatus(const char error, char *buffer, const int length);
