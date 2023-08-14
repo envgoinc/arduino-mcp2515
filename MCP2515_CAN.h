@@ -7,6 +7,7 @@
 
 #include <can.h>
 #include <mcp2515.h>
+#include <Arduino.h>
 
 class MCP2515_CAN{
   public:
@@ -48,8 +49,8 @@ class MCP2515_CAN{
     typedef enum CAN_CLOCK CAN_CLOCK;
 
     // Default buffer size is set to 16. But this can be changed by using constructor in main code.
-    MCP2515_CAN(uint8_t cs, const uint32_t spi_clock = 0, RXQUEUE_TABLE rxSize = RX_SIZE_16);
-    MCP2515_CAN(uint8_t cs, RXQUEUE_TABLE rxSize = RX_SIZE_16);
+    MCP2515_CAN(uint8_t cs, const uint32_t spi_clock = 0, RXQUEUE_TABLE rxSize = RX_SIZE_8);
+    MCP2515_CAN(uint8_t cs, RXQUEUE_TABLE rxSize = RX_SIZE_8);
     void begin();
     CAN_ERROR getError();
     void setClock(CAN_CLOCK clock);
@@ -68,29 +69,29 @@ class MCP2515_CAN{
   
     // These are public because these are also used from interrupts.
     typedef struct RingbufferTypeDef {
-      volatile uint8_t head;
-      volatile uint8_t tail;
-      uint8_t size;
-      volatile can_frame *buffer;
+      volatile uint8_t head = 0;
+      volatile uint8_t tail = 0;
+      volatile uint8_t size = 0;
+      volatile can_frame *buffer = nullptr;
     } RingbufferTypeDef;
 
-    RingbufferTypeDef rxRing;
+    RingbufferTypeDef rxRing{};
 
     bool addToRingBuffer(RingbufferTypeDef &ring, const can_frame &msg);
     bool removeFromRingBuffer(RingbufferTypeDef &ring, can_frame &msg);
 
-    volatile can_frame *rx_buffer;
+    volatile can_frame *rx_buffer = nullptr;
 
   protected:
-    uint8_t sizeRxBuffer;
+    uint8_t sizeRxBuffer = 0;
   
   private:
-    MCP2515 *_mcp2515;
-    uint8_t _cs;
-    CAN_STATE _state;
-    CAN_ERROR _err;
+    MCP2515 *_mcp2515 = nullptr;
+    uint8_t _cs = 0;
+    CAN_STATE _state = BUS_OFF;
+    CAN_ERROR _err = ERROR_OK;
     CAN_CLOCK _canClock = MCP_16MHZ;
-    CAN_SPEED _bitrate;
+    CAN_SPEED _bitrate = CAN_1000KBPS;
     bool _timestampEnabled = false;
     bool _listenOnly = false;
     bool _loopback = false;
@@ -101,7 +102,7 @@ class MCP2515_CAN{
     static const uint16_t TIMESTAMP_LIMIT = 0xEA60;
 
     void setError(CAN_ERROR error);
-    bool isInitialized() { return rx_buffer != 0; }
+    bool isInitialized() { return rx_buffer != nullptr; }
     void initRingBuffer(RingbufferTypeDef &ring, volatile can_frame *buffer, uint8_t size);
     void initializeBuffers(void);
     bool isRingBufferEmpty(RingbufferTypeDef &ring);

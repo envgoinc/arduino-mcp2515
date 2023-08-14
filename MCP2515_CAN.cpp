@@ -313,6 +313,7 @@ void MCP2515_CAN::processInterrupt(){
       _mcp2515->clearMERR();
   }
 
+  _mcp2515->clearInterrupts();
   setError(ERROR_OK);
 }
 
@@ -322,7 +323,7 @@ MCP2515_CAN::CAN_ERROR MCP2515_CAN::receiveCan(const MCP2515::RXBn rxBuffer){
       return ERROR_NOT_CONNECTED;
   }
 
-  can_frame frame;
+  can_frame frame{};
   MCP2515::ERROR result = _mcp2515->readMessage(rxBuffer, &frame);
   if (result == MCP2515::ERROR_NOMSG) {
       return ERROR_OK;
@@ -338,11 +339,13 @@ MCP2515_CAN::CAN_ERROR MCP2515_CAN::receiveCan(const MCP2515::RXBn rxBuffer){
 
 
 bool MCP2515_CAN::addToRingBuffer(RingbufferTypeDef &ring, const can_frame &msg){
+  noInterrupts();
   uint8_t nextEntry = (ring.head + 1) % ring.size;
 
   // check if the ring buffer is full
   if(nextEntry == ring.tail)
   {
+    interrupts();
     return(false);
   }
 
@@ -351,29 +354,32 @@ bool MCP2515_CAN::addToRingBuffer(RingbufferTypeDef &ring, const can_frame &msg)
 
   // bump the head to point to the next free entry
   ring.head = nextEntry;
-
+  interrupts();
   return(true);
 }
 
 bool MCP2515_CAN::removeFromRingBuffer(RingbufferTypeDef &ring, can_frame &msg){
   // check if the ring buffer has data available
+  noInterrupts();
   if(isRingBufferEmpty(ring) == true)
   {
+      interrupts();
       return(false);
   }
 
   // copy the message
   memcpy((void *)&msg,(void *)&ring.buffer[ring.tail], sizeof(can_frame));
-  //printHook(&ring.buffer[ring.tail]); 
+ 
   // bump the tail pointer
   ring.tail =(ring.tail + 1) % ring.size;
+  interrupts();
   return(true);
 }
 
 void MCP2515_CAN::initializeBuffers(void){
     if(isInitialized()) { return; }
 
-    if(rx_buffer==0)
+    if(rx_buffer == nullptr)
     {
       rx_buffer = new can_frame[sizeRxBuffer];
     }
