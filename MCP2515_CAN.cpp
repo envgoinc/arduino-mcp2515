@@ -313,7 +313,6 @@ void MCP2515_CAN::processInterrupt(){
       _mcp2515->clearMERR();
   }
 
-  _mcp2515->clearInterrupts();
   setError(ERROR_OK);
 }
 
